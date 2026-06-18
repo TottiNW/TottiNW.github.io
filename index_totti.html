@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nattapat Wattanasartsatorn — Unity Gameplay Programmer</title>
+<meta name="description" content="A game-themed portfolio. Unity / C# gameplay programmer — procedural worlds, combat systems, and the performance work that holds them together." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E1117; --bg-2:#141A24; --bg-3:#1A2130; --line:#2A3344; --line-soft:#212a39;
+    --text:#ECEFF6; --muted:#98A1B4; --muted-2:#6E7689;
+    --amber:#F4B65C; --amber-bright:#FFC974; --cyan:#5BD8E6; --cyan-dim:rgba(91,216,230,.14);
+    --pixel:'Press Start 2P',monospace; --hud:'VT323',monospace;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif;
+    --mx:34%; --my:48%;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--body); font-size:17px; line-height:1.65; overflow-x:hidden; -webkit-font-smoothing:antialiased}
+  a{color:inherit; text-decoration:none}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 26px}
+  .pixel-label{font-family:var(--pixel); font-size:11px; color:var(--cyan); letter-spacing:.02em}
+  .todo{font-family:var(--hud); font-size:16px; color:var(--amber); background:rgba(244,182,92,.08); border:1px dashed rgba(244,182,92,.45); border-radius:5px; padding:0 7px; display:inline-block}
+
+  header.hud{position:sticky; top:0; z-index:60; background:rgba(11,14,20,.82); backdrop-filter:blur(8px); border-bottom:1px solid var(--line-soft)}
+  .hud .wrap{display:flex; align-items:center; justify-content:space-between; height:54px}
+  .hud .player{font-family:var(--pixel); font-size:11px; color:var(--amber)}
+  .hud .player b{color:#fff}
+  .hud nav{display:flex; gap:22px; align-items:center; font-family:var(--hud); font-size:19px}
+  .hud nav a{color:var(--muted); letter-spacing:.04em; transition:color .15s}
+  .hud nav a:hover{color:var(--amber)}
+  .hud nav a.coin{color:var(--cyan); border:1px solid var(--cyan-dim); padding:2px 11px; border-radius:6px}
+  .hud nav a.coin:hover{background:var(--cyan-dim); color:#fff}
+  @media(max-width:640px){ .hud nav a.opt{display:none} .hud .player{font-size:9px} }
+
+  .hero{position:relative; min-height:100vh; display:flex; align-items:center}
+  #dungeon{position:fixed; inset:0; width:100%; height:100%; z-index:-3}
+  #dungeon .room{fill:rgba(124,138,165,.06); stroke:rgba(155,170,195,.5); stroke-width:1.5; vector-effect:non-scaling-stroke}
+  #dungeon .cor{fill:none; stroke:rgba(124,138,165,.15); stroke-linejoin:round; stroke-linecap:round}
+  /* the torch: reveals the hidden dungeon in a warm pool of light, near-black beyond */
+  .torch{position:fixed; inset:0; z-index:-2; pointer-events:none; transition:background .07s linear;
+    background:radial-gradient(circle at var(--mx) var(--my),
+      rgba(244,182,92,.13) 0,
+      rgba(244,182,92,.05) 72px,
+      rgba(9,11,16,0) 132px,
+      rgba(9,11,16,.74) 300px,
+      rgba(9,11,16,.97) 500px)}
+  .veil{position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(180deg, transparent 62%, rgba(14,17,23,.6) 86%, var(--bg) 100%)}
+  .crt{position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.4;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.05) 2px 3px)}
+  .hero-in{position:relative; z-index:4; width:100%; padding:80px 0 60px}
+  .hero .eyebrow{font-family:var(--hud); font-size:20px; letter-spacing:.18em; color:var(--amber); text-transform:uppercase}
+  .hero h1{font-family:var(--disp); font-weight:800; font-size:clamp(38px,7.6vw,76px); line-height:.96; letter-spacing:-.02em; margin:.28em 0 .12em; text-shadow:0 2px 30px rgba(0,0,0,.7); max-width:15ch}
+  .hero .tagline{font-family:var(--pixel); font-size:clamp(11px,1.7vw,14px); color:var(--amber); line-height:1.8; text-shadow:0 2px 14px rgba(0,0,0,.6)}
+  .hero .thesis{font-family:var(--body); max-width:48ch; color:#D7DBE6; font-size:clamp(15px,2vw,18px); margin:20px 0 30px; text-shadow:0 1px 12px rgba(0,0,0,.7)}
+  .cta{display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+  .btn{font-family:var(--pixel); font-size:12px; padding:14px 18px; border-radius:9px; display:inline-flex; gap:9px; align-items:center; transition:transform .12s, background .2s, border-color .2s; cursor:pointer; border:0}
+  .btn-start{background:var(--amber); color:#1A1206}
+  .btn-start:hover{background:var(--amber-bright); transform:translateY(-2px)}
+  .btn-ghost{background:none; border:1px solid var(--line); color:var(--text); font-family:var(--hud); font-size:18px; padding:11px 16px; letter-spacing:.04em}
+  .btn-ghost:hover{border-color:var(--amber); color:var(--amber); transform:translateY(-2px)}
+  .hint{font-family:var(--hud); font-size:17px; color:var(--muted-2); margin-top:16px}
+  .hint b{color:var(--amber)}
+
+  .stats{position:relative; border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); background:rgba(20,26,36,.9)}
+  .stats .wrap{padding:20px 26px}
+  .stats .lab{font-family:var(--pixel); font-size:10px; color:var(--cyan); display:block; margin-bottom:13px}
+  .chips{display:flex; flex-wrap:wrap; gap:9px}
+  .chip{font-family:var(--hud); font-size:18px; color:var(--text); border:1px solid var(--line); border-radius:7px; padding:4px 12px; letter-spacing:.02em}
+  .chip b{color:var(--amber); font-weight:400}
+
+  section{padding:92px 0}
+  .head{margin-bottom:24px}
+  .head .pixel-label{display:block; margin-bottom:12px}
+  .head h2{font-family:var(--disp); font-weight:800; font-size:clamp(27px,4.4vw,40px); letter-spacing:-.01em; margin:0}
+  .lead{color:var(--muted); max-width:60ch; font-size:18px; margin:8px 0 0}
+
+  #lore p{max-width:64ch} #lore p+p{margin-top:16px}
+  .abil-chips{display:flex; flex-wrap:wrap; gap:9px; margin-top:24px}
+  .ac{font-family:var(--hud); font-size:18px; color:var(--text); background:var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:5px 12px}
+
+  .level{border-top:1px solid var(--line); padding:46px 0; display:grid; gap:26px; grid-template-columns:1fr}
+  .level:last-of-type{border-bottom:1px solid var(--line)}
+  @media(min-width:880px){ .level{grid-template-columns:minmax(0,400px) 1fr; gap:46px} }
+  .screen{position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:linear-gradient(135deg,var(--bg-2),var(--bg-3)); display:flex; align-items:center; justify-content:center; text-align:center}
+  .screen iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+  .screen .ph{font-family:var(--hud); font-size:17px; color:var(--muted-2); padding:18px; line-height:1.5}
+  .screen .ph b{font-family:var(--pixel); font-size:10px; color:var(--amber); display:block; margin-bottom:10px}
+  .lv-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px}
+  .lv-no{font-family:var(--pixel); font-size:12px; color:var(--cyan)}
+  .badge{font-family:var(--hud); font-size:16px; letter-spacing:.06em; padding:2px 9px; border-radius:5px; border:1px solid}
+  .badge.prog{color:var(--amber); border-color:rgba(244,182,92,.4); background:rgba(244,182,92,.08)}
+  .badge.win{color:#7BE0A0; border-color:rgba(123,224,160,.4); background:rgba(123,224,160,.08)}
+  .badge.done{color:var(--cyan); border-color:var(--cyan-dim); background:var(--cyan-dim)}
+  .lv-yr{font-family:var(--hud); font-size:17px; color:var(--muted-2); margin-left:auto}
+  .level h3{font-family:var(--disp); font-weight:700; font-size:25px; margin:0; letter-spacing:-.01em}
+  .level .world{font-family:var(--hud); font-size:17px; color:var(--amber); margin:5px 0 2px; letter-spacing:.02em}
+  .level .tag{color:var(--muted); font-style:italic; margin:9px 0 18px}
+  .cri{list-style:none; margin:0; padding:0; display:grid; gap:12px}
+  .cri li{display:grid; grid-template-columns:96px 1fr; gap:14px; align-items:start}
+  .cri .l{font-family:var(--pixel); font-size:9px; line-height:1.7; color:var(--amber); padding-top:3px; letter-spacing:.02em}
+  .cri .v{opacity:.94}
+  .cri .v b{color:var(--amber-bright); font-weight:600}
+  .loadout{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+  .loadout span{font-family:var(--hud); font-size:16px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:2px 10px; letter-spacing:.02em}
+  .actions{display:flex; gap:12px; margin-top:18px; flex-wrap:wrap}
+  .actions a{font-family:var(--pixel); font-size:10px; color:var(--bg); background:var(--amber); padding:9px 13px; border-radius:7px; transition:transform .12s, background .2s}
+  .actions a:hover{background:var(--amber-bright); transform:translateY(-2px)}
+  .actions a.alt{background:none; color:var(--text); border:1px solid var(--line)}
+  .actions a.alt:hover{border-color:var(--amber); color:var(--amber); background:none}
+  .soon{font-family:var(--hud); font-size:16px; color:var(--muted-2); margin-top:18px; letter-spacing:.02em}
+  @media(max-width:520px){ .cri li{grid-template-columns:1fr; gap:3px} .cri .l{padding-top:0} }
+
+  .skillgrid{display:grid; gap:22px; grid-template-columns:1fr}
+  @media(min-width:760px){ .skillgrid{grid-template-columns:1fr 1fr; gap:22px 46px} }
+  .sk{background:var(--bg-2); border:1px solid var(--line); border-radius:12px; padding:20px}
+  .sk h4{font-family:var(--pixel); font-size:10px; color:var(--cyan); margin:0 0 12px; line-height:1.6}
+  .sk p{margin:0; opacity:.92; font-size:15.5px}
+
+  #lore,#levels,#abilities,#continue{position:relative; background:rgba(14,17,23,.86)}
+  #continue{border-top:1px solid var(--line)}
+  .cont{background:var(--bg-2); border:1px solid var(--line); border-radius:16px; padding:46px clamp(22px,5vw,54px); text-align:center}
+  .cont .pixel-label{color:var(--cyan)}
+  .cont h2{font-family:var(--pixel); font-size:clamp(20px,4vw,30px); color:var(--amber); margin:14px 0 14px; line-height:1.5}
+  .cont p{color:var(--muted); max-width:46ch; margin:0 auto 26px; font-size:16px}
+  .cont .links{display:flex; gap:13px; flex-wrap:wrap; justify-content:center}
+
+  footer{position:relative; padding:30px 0 56px; border-top:1px solid var(--line-soft); background:rgba(14,17,23,.9)}
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-family:var(--hud); font-size:16px; color:var(--muted-2); letter-spacing:.03em}
+
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease}
+  .reveal.in{opacity:1; transform:none}
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .reveal{opacity:1; transform:none; transition:none}
+    .crt{display:none}
+    .btn:hover,.btn-ghost:hover,.actions a:hover{transform:none}
+  }
+  :focus-visible{outline:2px solid var(--amber); outline-offset:3px; border-radius:4px}
+</style>
+</head>
+<body id="top">
+<svg id="dungeon" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+<div class="torch" id="torch" aria-hidden="true"></div>
+<div class="crt" aria-hidden="true"></div>
+
+<header class="hud">
+  <div class="wrap">
+    <a class="player" href="#top">◈ <b>NATTAPAT</b></a>
+    <nav>
+      <a class="opt" href="#lore">LORE</a>
+      <a href="#levels">LEVELS</a>
+      <a class="opt" href="#abilities">ABILITIES</a>
+      <a class="coin" href="#continue">▶ CONTACT</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-label="Start screen">
+    <div class="wrap hero-in">
+      <p class="eyebrow">Insert coin — a gameplay programmer portfolio</p>
+      <h1>Nattapat Wattanasartsatorn</h1>
+      <p class="tagline">UNITY &nbsp;·&nbsp; C# &nbsp;·&nbsp; GAMEPLAY PROGRAMMER</p>
+      <p class="thesis">Systems-driven, atmospheric games — procedural worlds, combat, and the performance work that holds them together. First-Class CS grad, MSc AI in progress.</p>
+      <div class="cta">
+        <button class="btn btn-start" id="start">▶ PRESS START</button>
+        <a class="btn btn-ghost" href="#levels">LEVELS ↓</a>
+      </div>
+      <p class="hint">Your cursor is a <b>torch</b> — move it through the dark to explore the dungeon.</p>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="wrap">
+      <span class="lab">▎PLAYER STATS</span>
+      <div class="chips">
+        <span class="chip"><b>◆</b> First-Class BSc Computer Science</span>
+        <span class="chip"><b>◆</b> MSc AI — in progress</span>
+        <span class="chip"><b>◆</b> Global Game Jam — Winner</span>
+        <span class="chip"><b>◆</b> London · ready to work remotely</span>
+      </div>
+    </div>
+  </div>
+
+  <section id="lore">
+    <div class="wrap">
+      <div class="head reveal"><span class="pixel-label">LORE</span><h2>Player bio</h2></div>
+      <p class="lead reveal">Unity/C# generalist who likes turning ideas into playable mechanics.</p>
+      <p class="reveal" style="margin-top:18px">Most of my projects are roguelikes and dungeon-crawlers — no accident, since they're where procedural systems, combat, and performance all collide. I like the parts under the hood: a generator that lays out a new level every run, an object pool that keeps the frame rate steady when the screen fills with spells, an enemy that behaves the way the design promised.</p>
+      <p class="reveal">But systems aren't the whole job. The work I'm proudest of is as much about <em>feel</em> — light, space, atmosphere, the sense of being somewhere. I want to build games that are accessible, atmospheric, and driven by systems you can actually feel.</p>
+      <div class="abil-chips reveal">
+        <span class="ac">Gameplay & combat systems</span><span class="ac">Procedural generation</span><span class="ac">Performance & profiling</span><span class="ac">Enemy AI & spawning</span><span class="ac">Level / environment implementation</span><span class="ac">Small-team collaboration</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="levels">
+    <div class="wrap">
+      <div class="head reveal"><span class="pixel-label">LEVELS</span><h2>Selected work</h2><p class="lead">Four levels — the challenge, my role in it, and what dropped at the end.</p></div>
+
+      <article class="level reveal">
+        <div class="screen"><span class="ph"><b>[ INSERT MEDIA ]</b>A GIF of a dungeon generating —<br>or a run through a floor — lands hardest here.</span></div>
+        <div>
+          <div class="lv-top"><span class="lv-no">LEVEL 01</span><span class="badge prog">IN PROGRESS</span><span class="lv-yr">2025 – Present</span></div>
+          <h3>Procedural Dungeon Roguelike</h3>
+          <p class="world">Independent project · Unity, C#, Git</p>
+          <p class="tag">A first-person roguelike that builds a brand-new dungeon every run.</p>
+          <ul class="cri">
+            <li><span class="l">CHALLENGE</span><span class="v">Generate connected, playable dungeon floors that feel deliberate — yet are different every single run.</span></li>
+            <li><span class="l">ROLE</span><span class="v">Built the generation pipeline: <b>Binary Space Partitioning</b> for room placement and <b>random-walk</b> corridor carving. Architected modular Unity/C# systems that split map generation, prefab-based level construction, and scene bootstrapping, then turn grid data into real 3D space.</span></li>
+            <li><span class="l">NOW</span><span class="v">Adding runtime NavMesh baking, floor management, enemy spawning and enemy AI for replayable FPS combat.</span></li>
+          </ul>
+          <div class="loadout"><span>Unity</span><span>C#</span><span>BSP</span><span>Random walk</span><span>NavMesh</span><span>Git</span></div>
+          <div class="actions"><a href="https://github.com/TottiNW" target="_blank" rel="noopener">&lt;/&gt; CODE</a></div>
+        </div>
+      </article>
+
+      <article class="level reveal">
+        <div class="screen"><span class="ph"><b>[ INSERT MEDIA ]</b>Enemy-heavy combat + a before/after<br>Profiler frame-time shot sells the +25%.</span></div>
+        <div>
+          <div class="lv-top"><span class="lv-no">LEVEL 02</span><span class="badge done">SHIPPED</span><span class="lv-yr">2023–2024</span></div>
+          <h3>Spellscaper</h3>
+          <p class="world">Independent project · Unity, C#, GitLab, Jira</p>
+          <p class="tag">A spell-combining roguelike, built as a controlled stress test for Unity performance.</p>
+          <ul class="cri">
+            <li><span class="l">CHALLENGE</span><span class="v">Spell-heavy combat fills the screen with projectiles and effects — exactly when the frame rate is most likely to fall apart.</span></li>
+            <li><span class="l">ROLE</span><span class="v">Built the combat and spell-combination systems, then used them as scalable test cases (varying enemy counts, projectiles, spell interactions). Profiled CPU/GPU load, memory and frame stability in the <b>Unity Profiler</b> to pin down bottlenecks.</span></li>
+            <li><span class="l">IMPACT</span><span class="v">Object pooling, LOD, occlusion culling and batching lifted average frame rate by <b>up to 25%</b> under identical gameplay conditions.</span></li>
+          </ul>
+          <div class="loadout"><span>Unity</span><span>C#</span><span>Unity Profiler</span><span>Object pooling</span><span>LOD</span><span>GitLab</span></div>
+          <p class="soon">⌁ Source code being recovered &amp; uploaded to GitHub — link coming soon.</p>
+        </div>
+      </article>
+
+      <article class="level reveal">
+        <div class="screen"><span class="ph"><b>[ INSERT MEDIA ]</b>A screenshot of the rebuilt place —<br>ideally beside a photo of the real spot.</span></div>
+        <div>
+          <div class="lv-top"><span class="lv-no">LEVEL 03</span><span class="badge prog">PERSONAL</span><span class="lv-yr">Ongoing</span></div>
+          <h3>A Place We Remember</h3>
+          <p class="world">Personal project · Unity</p>
+          <p class="tag">A gift for my girlfriend — real places and moments from our relationship, rebuilt as spaces she can step back into.</p>
+          <ul class="cri">
+            <li><span class="l">CHALLENGE</span><span class="v">Turn a real, meaningful place into a space that <em>feels</em> like being there again — its layout, light and mood — not just a model of it.</span></li>
+            <li><span class="l">ROLE</span><span class="v">Designed and built it in Unity as an explorable memory, recreating the real location's space and atmosphere — and structured it to <b>grow</b>, so new chapters can be added for anniversaries, birthdays and other moments over time.</span></li>
+            <li><span class="l">WHY</span><span class="v">The level that proves I build for <b>people</b> and for <b>feel</b>, not just systems — a personal gift, made to be added to for years.</span></li>
+          </ul>
+          <div class="loadout"><span>Unity</span><span>Environment</span><span>Lighting &amp; mood</span></div>
+          <div class="actions"><a href="https://github.com/TottiNW/Happy-Birthday-git" target="_blank" rel="noopener">&lt;/&gt; CODE</a></div>
+        </div>
+      </article>
+
+      <article class="level reveal">
+        <div class="screen"><iframe src="https://www.youtube.com/embed/ATQRmiy-H3M" title="Ha Ha Haunters — gameplay" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+        <div>
+          <div class="lv-top"><span class="lv-no">LEVEL 04</span><span class="badge win">★ CLEARED · JAM WINNER</span><span class="lv-yr">Global Game Jam · Jan 2024</span></div>
+          <h3>Ha Ha Haunters</h3>
+          <p class="world">48-hour jam · Team of 4 · Unity, C#, GitLab</p>
+          <p class="tag">A 3D first-person survival shooter — humorous ghosts, animal-themed weapons — built and shipped in 48 hours.</p>
+          <ul class="cri">
+            <li><span class="l">CHALLENGE</span><span class="v">Design, build and finish a complete, playable game to a surprise theme in two days, with a four-person team.</span></li>
+            <li><span class="l">ROLE</span><span class="v">Programmed core gameplay mechanics, <b>enemy wave behaviour</b>, weapon interactions and player-facing systems; integrated assets and prefabs into playable scenes.</span></li>
+            <li><span class="l">IMPACT</span><span class="v">A finished game that <b>won its jam</b> — proof I can scope, communicate and deliver under real pressure. <em>(Watch it →)</em></span></li>
+          </ul>
+          <div class="loadout"><span>Unity</span><span>C#</span><span>Enemy AI</span><span>Weapon systems</span><span>GitLab</span></div>
+          <div class="actions"><a href="https://www.youtube.com/watch?v=ATQRmiy-H3M" target="_blank" rel="noopener">▶ WATCH</a><a class="alt" href="#" data-todo="your itch.io page URL">▶ ITCH.IO</a></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="abilities">
+    <div class="wrap">
+      <div class="head reveal"><span class="pixel-label">ABILITIES</span><h2>Toolkit</h2></div>
+      <div class="skillgrid">
+        <div class="sk reveal"><h4>GAMEPLAY PROGRAMMING</h4><p>Combat & spell systems, enemy AI & wave behaviour, weapon mechanics, player-facing systems, level implementation.</p></div>
+        <div class="sk reveal"><h4>PROCEDURAL & GENERATION</h4><p>Binary Space Partitioning, random-walk carving, prefab-based level construction, grid-to-3D pipelines.</p></div>
+        <div class="sk reveal"><h4>ENGINE & PERFORMANCE</h4><p>Unity 3D, Unity Profiler, object pooling, LOD, occlusion culling, batching, NavMesh.</p></div>
+        <div class="sk reveal"><h4>LANGUAGES & TOOLS</h4><p>C#, C++, Python, Java, SQL. Git, GitLab, Jira, Figma — plus an MSc AI grounding in ML and multi-agent systems.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="continue">
+    <div class="wrap">
+      <div class="cont reveal">
+        <span class="pixel-label">CONTINUE?</span>
+        <h2>LET'S BUILD<br>SOMETHING</h2>
+        <p>Open to freelance and contract gameplay-programming work, and happy to work remotely. Fastest way to reach me is email.</p>
+        <div class="links">
+          <a class="btn btn-start" href="mailto:nattapatsomjit@gmail.com">✉ EMAIL ME</a>
+          <a class="btn btn-ghost" href="https://www.linkedin.com/in/nattapat-wattanasarts/" target="_blank" rel="noopener">LinkedIn</a>
+          <a class="btn btn-ghost" href="https://github.com/TottiNW" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>NATTAPAT WATTANASARTSATORN — UNITY GAMEPLAY PROGRAMMER</span>
+    <span>MOVE YOUR TORCH TO EXPLORE THE DARK</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  function ri(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
+
+  // Build a detailed dungeon scene as an SVG string (hidden until the torch reveals it)
+  function scene(cols, rows, CELL){
+    var rooms=[], tries=0, MAX_ROOMS=13, MAX_TRIES=300;
+    function hit(r){ for(var i=0;i<rooms.length;i++){ var o=rooms[i];
+      if(!(r.x+r.w+2<o.x || o.x+o.w+2<r.x || r.y+r.h+2<o.y || o.y+o.h+2<r.y)) return true; } return false; }
+    while(rooms.length<MAX_ROOMS && tries<MAX_TRIES){ tries++;
+      var w=ri(4,10), h=ri(3,7), x=ri(2,cols-w-3), y=ri(2,rows-h-3);
+      var r={x:x,y:y,w:w,h:h}; if(!hit(r)) rooms.push(r); }
+    function cx(r){ return Math.round(r.x+r.w/2); } function cy(r){ return Math.round(r.y+r.h/2); }
+    var cor=[]; for(var i=1;i<rooms.length;i++){ cor.push({ax:cx(rooms[i-1]),ay:cy(rooms[i-1]),bx:cx(rooms[i]),by:cy(rooms[i]),flip:Math.random()<.5}); }
+
+    var W=cols*CELL, H=rows*CELL, s='';
+    s+='<defs>';
+    s+='<pattern id="grid" width="'+CELL+'" height="'+CELL+'" patternUnits="userSpaceOnUse"><path d="M '+CELL+' 0 L 0 0 0 '+CELL+'" fill="none" stroke="rgba(124,138,165,.05)" stroke-width="1" vector-effect="non-scaling-stroke"/></pattern>';
+    s+='<filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+    s+='</defs>';
+    s+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#grid)"/>';
+
+    // corridors (passages) under rooms
+    var cw=(CELL*0.6).toFixed(1);
+    s+='<g>';
+    cor.forEach(function(k){ var ax=k.ax*CELL,ay=k.ay*CELL,bx=k.bx*CELL,by=k.by*CELL;
+      var d=k.flip?('M '+ax+' '+ay+' V '+by+' H '+bx):('M '+ax+' '+ay+' H '+bx+' V '+by);
+      s+='<path class="cor" d="'+d+'" stroke-width="'+cw+'"/>'; });
+    s+='</g>';
+
+    // rooms
+    s+='<g>';
+    rooms.forEach(function(r){ s+='<rect class="room" x="'+(r.x*CELL)+'" y="'+(r.y*CELL)+'" width="'+(r.w*CELL)+'" height="'+(r.h*CELL)+'" rx="3"/>'; });
+    s+='</g>';
+
+    // ---- icons hidden in the dark ----
+    s+='<g>';
+    function px(r){ return (r.x+r.w/2)*CELL; } function py(r){ return (r.y+r.h/2)*CELL; }
+
+    if(rooms.length){ // entrance marker (you start here) — cyan
+      var e=rooms[0], ex=px(e), ey=py(e);
+      s+='<circle cx="'+ex+'" cy="'+ey+'" r="6" fill="none" stroke="#5BD8E6" stroke-width="1.6" vector-effect="non-scaling-stroke" filter="url(#glow)"/>';
+      s+='<circle cx="'+ex+'" cy="'+ey+'" r="2.4" fill="#5BD8E6" filter="url(#glow)"/>';
+    }
+    if(rooms.length>1){ // exit portal (the goal) — amber glow
+      var g=rooms[rooms.length-1], gx=px(g), gy=py(g);
+      s+='<circle cx="'+gx+'" cy="'+gy+'" r="8.5" fill="none" stroke="#F4B65C" stroke-width="2.2" vector-effect="non-scaling-stroke" filter="url(#glow)"/>';
+      s+='<circle cx="'+gx+'" cy="'+gy+'" r="3" fill="#FFC974" filter="url(#glow)"/>';
+    }
+
+    // chest + skull + slime in some interior rooms
+    var mid=[]; for(var j=1;j<rooms.length-1;j++) mid.push(j);
+    for(var m=mid.length-1;m>0;m--){ var n=Math.floor(Math.random()*(m+1)); var t=mid[m]; mid[m]=mid[n]; mid[n]=t; }
+    if(mid[0]!=null){ var c=rooms[mid[0]], X=px(c), Y=py(c); // chest
+      s+='<g filter="url(#glow)"><rect x="'+(X-7)+'" y="'+(Y-2)+'" width="14" height="9" rx="1" fill="#B5832F"/><rect x="'+(X-7)+'" y="'+(Y-5)+'" width="14" height="4" rx="1" fill="#8A6322"/><circle cx="'+X+'" cy="'+(Y+1)+'" r="1.5" fill="#FFE0A0"/></g>'; }
+    if(mid[1]!=null){ var k2=rooms[mid[1]], X2=px(k2), Y2=py(k2); // skull
+      s+='<g><circle cx="'+X2+'" cy="'+(Y2-1)+'" r="6" fill="#cfd4e4"/><circle cx="'+(X2-2.3)+'" cy="'+(Y2-1)+'" r="1.6" fill="#10141d"/><circle cx="'+(X2+2.3)+'" cy="'+(Y2-1)+'" r="1.6" fill="#10141d"/><rect x="'+(X2-3)+'" y="'+(Y2+3.5)+'" width="6" height="3" rx="1" fill="#cfd4e4"/></g>'; }
+    if(mid[2]!=null){ var k3=rooms[mid[2]], X3=px(k3), Y3=py(k3); // slime
+      s+='<g><circle cx="'+X3+'" cy="'+Y3+'" r="5.5" fill="rgba(124,205,176,.5)"/><circle cx="'+(X3-1.8)+'" cy="'+(Y3-1)+'" r="1.2" fill="#0c1016"/><circle cx="'+(X3+1.8)+'" cy="'+(Y3-1)+'" r="1.2" fill="#0c1016"/></g>'; }
+
+    // torch sconces near several room corners
+    var tcount=Math.min(6, rooms.length);
+    for(var ti=0; ti<tcount; ti++){ var rr=rooms[ti]; var txp=(rr.x+1)*CELL, typ=(rr.y+1)*CELL;
+      s+='<circle cx="'+txp+'" cy="'+typ+'" r="2.4" fill="#F4B65C" filter="url(#glow)"/>'; }
+
+    s+='</g>';
+    return {svg:s, W:W, H:H};
+  }
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  function draw(){
+    var svg=document.getElementById('dungeon'); if(!svg) return;
+    var w=window.innerWidth, CELL=24;
+    var cols = w<640?26:(w<1024?42:60), rows = w<640?34:27;
+    try{
+      var r=scene(cols,rows,CELL);
+      svg.setAttribute('viewBox','0 0 '+r.W+' '+r.H);
+      svg.innerHTML=r.svg;
+      if(!reduce){ svg.animate([{opacity:0},{opacity:1}],{duration:700,fill:'forwards',easing:'ease-out'}); }
+    }catch(e){}
+  }
+  draw();
+
+  if(window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+    window.addEventListener('pointermove', function(e){
+      document.documentElement.style.setProperty('--mx', e.clientX+'px');
+      document.documentElement.style.setProperty('--my', e.clientY+'px');
+    }, {passive:true});
+  }
+
+  var sb=document.getElementById('start');
+  if(sb) sb.addEventListener('click', function(){ var t=document.getElementById('lore'); if(t) t.scrollIntoView({behavior:reduce?'auto':'smooth'}); });
+
+  document.addEventListener('keydown', function(e){
+    if((e.key==='Enter'||e.key===' ') && document.activeElement===document.body && window.scrollY<40){
+      e.preventDefault(); var t=document.getElementById('lore'); if(t) t.scrollIntoView({behavior:reduce?'auto':'smooth'}); }
+  });
+
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt=setTimeout(draw,250); });
+
+  if('IntersectionObserver' in window && !reduce){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); },{threshold:.12});
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  } else { document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); }); }
+
+  document.querySelectorAll('[data-todo]').forEach(function(a){
+    a.addEventListener('click', function(ev){ var h=a.getAttribute('href'); if(h==='#'||h==='https://github.com/'){ ev.preventDefault(); a.setAttribute('title','TODO: '+a.getAttribute('data-todo')); } });
+  });
+})();
+</script>
+</body>
+</html>
