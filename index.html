@@ -33,7 +33,8 @@
 
   header.hud{position:sticky; top:0; z-index:60; background:rgba(11,14,20,.82); backdrop-filter:blur(8px); border-bottom:1px solid var(--line-soft)}
   .hud .wrap{display:flex; align-items:center; justify-content:space-between; height:54px}
-  .hud .player{font-family:var(--pixel); font-size:11px; color:var(--amber)}
+  .hud .player{font-family:var(--pixel); font-size:11px; color:var(--amber); display:inline-flex; align-items:center; transition:color .15s}
+  .hud .player:hover{color:var(--amber-bright)}
   .hud .player b{color:#fff}
   .hud nav{display:flex; gap:22px; align-items:center; font-family:var(--hud); font-size:19px}
   .hud nav a{color:var(--muted); letter-spacing:.04em; transition:color .15s}
@@ -157,7 +158,7 @@
 
 <header class="hud">
   <div class="wrap">
-    <a class="player" href="#top">◈ <b>NATTAPAT</b></a>
+    <a class="player" href="#top" aria-label="Home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-4.5h4V20"/></svg></a>
     <nav>
       <a class="opt" href="#lore">LORE</a>
       <a href="#levels">LEVELS</a>
@@ -172,6 +173,7 @@
     <div class="wrap hero-in">
       <p class="eyebrow">Insert coin — a gameplay programmer portfolio</p>
       <h1>Nattapat Wattanasartsatorn</h1>
+      <p style="font-family:var(--hud); font-size:21px; color:var(--muted); letter-spacing:.03em; margin:6px 0 0; text-shadow:0 1px 10px rgba(0,0,0,.6)">Call me <span style="color:var(--amber)">Totti</span></p>
       <p class="tagline">UNITY &nbsp;·&nbsp; C# &nbsp;·&nbsp; GAMEPLAY PROGRAMMER</p>
       <p class="thesis">Systems-driven, atmospheric games — procedural worlds, combat, and the performance work that holds them together. First-Class CS grad (University of Essex), MSc AI in progress at King's College London.</p>
       <div class="cta">
